@@ -1,0 +1,21 @@
+[
+    "step",
+    "amount",
+    "type_encoded",
+    "hour_of_day",
+    "day_of_week",
+    "log_amount",
+    "sqrt_amount",
+    "is_high_value",
+    "is_very_high_value",
+    "is_cash_out",
+    "is_transfer",
+    "is_payment",
+    "is_cash_in",
+    "is_debit",
+    "type_frequency",
+    "amount_vs_type_avg",
+    "amount_vs_step_avg",
+    "amount_count",
+    "is_duplicate_amount"
+]
