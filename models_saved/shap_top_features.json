@@ -1,0 +1,52 @@
+[
+    {
+        "feature": "amount_count",
+        "mean_abs_shap": 0.10127224774006194,
+        "rank": 1
+    },
+    {
+        "feature": "step_sin",
+        "mean_abs_shap": 0.0813357772880816,
+        "rank": 2
+    },
+    {
+        "feature": "is_payment",
+        "mean_abs_shap": 0.0770127469974671,
+        "rank": 3
+    },
+    {
+        "feature": "is_duplicate_amount",
+        "mean_abs_shap": 0.04438479548103811,
+        "rank": 4
+    },
+    {
+        "feature": "is_cash_in",
+        "mean_abs_shap": 0.03569231983415841,
+        "rank": 5
+    },
+    {
+        "feature": "amount",
+        "mean_abs_shap": 0.03396302240799211,
+        "rank": 6
+    },
+    {
+        "feature": "type_encoded",
+        "mean_abs_shap": 0.03146211265677796,
+        "rank": 7
+    },
+    {
+        "feature": "type_frequency",
+        "mean_abs_shap": 0.030663724817838255,
+        "rank": 8
+    },
+    {
+        "feature": "log_amount",
+        "mean_abs_shap": 0.029693307430065298,
+        "rank": 9
+    },
+    {
+        "feature": "hour_sin",
+        "mean_abs_shap": 0.02901406224050773,
+        "rank": 10
+    }
+]

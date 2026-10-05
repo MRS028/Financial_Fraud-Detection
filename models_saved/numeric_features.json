@@ -1,0 +1,12 @@
+[
+    "step",
+    "amount",
+    "log_amount",
+    "sqrt_amount",
+    "hour_of_day",
+    "day_of_week",
+    "amount_vs_type_avg",
+    "amount_vs_step_avg",
+    "amount_count",
+    "type_frequency"
+]

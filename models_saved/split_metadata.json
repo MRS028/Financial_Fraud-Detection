@@ -1,0 +1,13 @@
+{
+    "random_state": 42,
+    "smote_strategy": 0.05,
+    "split_ratio": "70/15/15",
+    "train_size": 4453834,
+    "val_size": 954393,
+    "test_size": 954393,
+    "train_resampled_size": 4672700,
+    "train_fraud": 3643,
+    "val_fraud": 562,
+    "test_fraud": 4008,
+    "train_fraud_after_smote": 222509
+}
