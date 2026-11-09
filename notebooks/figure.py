@@ -17,7 +17,7 @@ import shap
 warnings.filterwarnings("ignore")
 
 # ──────────────────────────────────────────────────────────────
-# PROJECT ROOT RESOLUTION
+# PROJECT ROOT
 # ──────────────────────────────────────────────────────────────
 def find_project_root():
     candidates = [Path(__file__).resolve().parent, Path.cwd().resolve()]
@@ -33,13 +33,12 @@ print(f"📁 Project root: {ROOT}")
 
 RAW_DATA   = ROOT / "data" / "raw" / "finguard-fraud-detection-dataset.csv"
 PROCESSED  = ROOT / "data" / "processed"
-FIG_DIR    = ROOT / "reports" / "figures"
+FIG_DIR    = ROOT / "reports" / "figuresNewV2"
 MODEL_DIR  = ROOT / "models_saved"
-
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────
-# STYLE
+# ⭐ PUBLICATION-GRADE STYLE (larger + bolder fonts)
 # ──────────────────────────────────────────────────────────────
 DPI = 600
 RANDOM_STATE = 42
@@ -48,23 +47,49 @@ np.random.seed(RANDOM_STATE)
 mpl.rcParams.update({
     "figure.dpi": DPI,
     "savefig.dpi": DPI,
+
+    # Fonts: bigger & bolder
     "font.family": "serif",
-    "font.serif": ["Times New Roman", "DejaVu Serif"],
-    "font.size": 11,
-    "axes.titlesize": 13,
+    "font.serif": ["Times New Roman", "DejaVu Serif", "Liberation Serif"],
+    "font.size": 13,                          # ← was 11
+    "axes.titlesize": 16,                     # ← was 13
     "axes.titleweight": "bold",
-    "axes.labelsize": 11,
-    "axes.labelweight": "semibold",
+    "axes.titlepad": 12,
+    "axes.labelsize": 14,                     # ← was 11
+    "axes.labelweight": "bold",               # ← was semibold
+    "axes.labelpad": 10,
+
+    # Ticks
+    "xtick.labelsize": 12,                    # ← was 9
+    "ytick.labelsize": 12,                    # ← was 9
+    "xtick.major.width": 1.4,
+    "ytick.major.width": 1.4,
+    "xtick.major.size": 6,
+    "ytick.major.size": 6,
+
+    # Legend
+    "legend.fontsize": 12,                    # ← was 9
+    "legend.title_fontsize": 13,
+    "legend.frameon": True,
+    "legend.framealpha": 0.95,
+    "legend.edgecolor": "black",
+
+    # Axes
     "axes.spines.top": False,
     "axes.spines.right": False,
+    "axes.linewidth": 1.4,                    # ← was default
     "axes.grid": True,
     "grid.alpha": 0.3,
     "grid.linestyle": "--",
-    "legend.fontsize": 9,
-    "legend.frameon": True,
-    "legend.framealpha": 0.9,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
+    "grid.linewidth": 0.8,
+
+    # Lines
+    "lines.linewidth": 2.4,                   # ← was 2.0
+
+    # Save
+    "savefig.bbox": "tight",
+    "savefig.facecolor": "white",
+    "savefig.pad_inches": 0.15,
 })
 
 PALETTE = {
@@ -85,14 +110,17 @@ def _save(fig, name):
 
 
 def _title(ax, text):
-    ax.set_title(text, fontsize=13, fontweight="bold", pad=10)
+    ax.set_title(text, fontsize=16, fontweight="bold", pad=12)
+
+
+def _suptitle(fig, text, y=1.02):
+    fig.suptitle(text, fontsize=18, fontweight="bold", y=y)
 
 
 def _require(path, label):
     if not path.exists():
         raise FileNotFoundError(
-            f"\n❌ Missing {label}:\n   {path}\n"
-            f"   Project root: {ROOT}"
+            f"\n❌ Missing {label}:\n   {path}\n   Project root: {ROOT}"
         )
 
 
@@ -140,23 +168,24 @@ def figure_eda_distribution():
     counts = df_raw["isFraud"].value_counts().sort_index()
     total = counts.sum()
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))   # ← bigger
     bars = axes[0].bar(["Non-Fraud", "Fraud"], counts.values,
                        color=[PALETTE["nonfraud"], PALETTE["fraud"]],
-                       edgecolor="black", linewidth=1.2)
+                       edgecolor="black", linewidth=1.8)   # ← thicker
     axes[0].set_ylabel("Transaction Count")
     _title(axes[0], "Fraud vs Non-Fraud Count")
     for b, v in zip(bars, counts.values):
         axes[0].text(b.get_x() + b.get_width() / 2, v,
                      f"{v:,}\n({100 * v / total:.3f}%)",
-                     ha="center", va="bottom", fontsize=10, fontweight="bold")
+                     ha="center", va="bottom",
+                     fontsize=13, fontweight="bold")       # ← bigger
 
     axes[1].pie(counts.values, labels=["Non-Fraud", "Fraud"],
                 autopct="%1.3f%%",
                 colors=[PALETTE["nonfraud"], PALETTE["fraud"]],
                 explode=(0.03, 0.03), startangle=90,
-                textprops={"fontsize": 10, "fontweight": "bold"},
-                wedgeprops={"edgecolor": "black", "linewidth": 1.0})
+                textprops={"fontsize": 13, "fontweight": "bold"},
+                wedgeprops={"edgecolor": "black", "linewidth": 1.8})
     _title(axes[1], "Fraud Proportion")
     fig.tight_layout()
     _save(fig, "fig01_fraud_distribution.png")
@@ -171,14 +200,15 @@ def figure_eda_type_fraud():
     stats["Rate"] *= 100
     stats = stats.sort_values("Fraud_Count", ascending=False)
 
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(12, 6.5))
     bars = ax.bar(stats.index, stats["Fraud_Count"],
-                  color=PALETTE["fraud"], edgecolor="black", linewidth=1.2)
+                  color=PALETTE["fraud"], edgecolor="black", linewidth=1.8)
     ax.set_ylabel("Fraud Transactions")
     _title(ax, "Fraud Cases by Transaction Type")
     for b, v in zip(bars, stats["Fraud_Count"]):
         ax.text(b.get_x() + b.get_width() / 2, v, f"{v:,}",
-                ha="center", va="bottom", fontsize=10, fontweight="bold")
+                ha="center", va="bottom",
+                fontsize=13, fontweight="bold")
     fig.tight_layout()
     _save(fig, "fig02_transaction_type_fraud.png")
 
@@ -186,14 +216,15 @@ def figure_eda_type_fraud():
 def figure_eda_amount():
     if df_raw is None: return
     print("\n[EDA] Amount analysis...")
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
     axes[0].hist(df_raw["amount"], bins=50, color=PALETTE["accent"],
-                 edgecolor="black", alpha=0.85)
+                 edgecolor="black", alpha=0.85, linewidth=1.2)
     axes[0].set_xlabel("Amount"); axes[0].set_ylabel("Frequency")
     _title(axes[0], "Raw Amount Distribution")
 
     axes[1].hist(np.log1p(df_raw["amount"]), bins=50,
-                 color=PALETTE["highlight"], edgecolor="black", alpha=0.85)
+                 color=PALETTE["highlight"], edgecolor="black",
+                 alpha=0.85, linewidth=1.2)
     axes[1].set_xlabel("log(Amount + 1)"); axes[1].set_ylabel("Frequency")
     _title(axes[1], "Log-Transformed Distribution")
 
@@ -201,7 +232,11 @@ def figure_eda_amount():
     nonfraud_amt = df_raw.loc[df_raw["isFraud"] == 0, "amount"]
     bp = axes[2].boxplot([nonfraud_amt, fraud_amt],
                          tick_labels=["Non-Fraud", "Fraud"],
-                         patch_artist=True, widths=0.6)
+                         patch_artist=True, widths=0.6,
+                         medianprops={"color": "black", "linewidth": 2},
+                         whiskerprops={"linewidth": 1.5},
+                         capprops={"linewidth": 1.5},
+                         boxprops={"linewidth": 1.5})
     for patch, color in zip(bp["boxes"],
                             [PALETTE["nonfraud"], PALETTE["fraud"]]):
         patch.set_facecolor(color); patch.set_alpha(0.75)
@@ -216,14 +251,14 @@ def figure_eda_time():
     print("\n[EDA] Time analysis...")
     df_raw["hour"] = df_raw["step"] % 24
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     df_raw.groupby("hour").size().plot(ax=axes[0],
-                                       color=PALETTE["accent"], lw=1.8)
+                                       color=PALETTE["accent"], lw=2.4)
     axes[0].set_xlabel("Hour of Day"); axes[0].set_ylabel("Transaction Count")
     _title(axes[0], "All Transactions by Hour")
 
     df_raw.loc[df_raw["isFraud"] == 1].groupby("hour").size().plot(
-        ax=axes[1], color=PALETTE["fraud"], lw=1.8)
+        ax=axes[1], color=PALETTE["fraud"], lw=2.4)
     axes[1].set_xlabel("Hour of Day"); axes[1].set_ylabel("Fraud Count")
     _title(axes[1], "Fraud Transactions by Hour")
     fig.tight_layout()
@@ -236,11 +271,14 @@ def figure_eda_correlation():
     num_df = df_raw.select_dtypes(include=[np.number])
     corr = num_df.corr()
 
-    fig, ax = plt.subplots(figsize=(11, 9))
+    fig, ax = plt.subplots(figsize=(13, 10))
     sns.heatmap(corr, annot=True, fmt=".2f", cmap="RdBu_r",
-                center=0, ax=ax, annot_kws={"size": 9, "weight": "bold"},
+                center=0, ax=ax,
+                annot_kws={"size": 11, "weight": "bold"},
                 cbar_kws={"label": "Pearson r", "shrink": 0.8},
                 linewidths=0.5, linecolor="white")
+    ax.figure.axes[-1].yaxis.label.set_size(13)
+    ax.figure.axes[-1].yaxis.label.set_weight("bold")
     _title(ax, "Feature Correlation Matrix")
     fig.tight_layout()
     _save(fig, "fig05_correlation_matrix.png")
@@ -273,7 +311,7 @@ def figure_smote_effect():
     ratio_before = n_nonfraud_before / max(n_fraud_before, 1)
     ratio_after  = n_nonfraud_after  / max(n_fraud_after,  1)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     labels = ["Non-Fraud", "Fraud"]
     colors = [PALETTE["nonfraud"], PALETTE["fraud"]]
 
@@ -281,17 +319,17 @@ def figure_smote_effect():
         (axes[0], [n_nonfraud_before, n_fraud_before], ratio_before, "Before SMOTE"),
         (axes[1], [n_nonfraud_after,  n_fraud_after],  ratio_after,  "After SMOTE"),
     ]:
-        bars = ax.bar(labels, vals, color=colors, edgecolor="black", linewidth=1.2)
+        bars = ax.bar(labels, vals, color=colors,
+                      edgecolor="black", linewidth=1.8)
         ax.set_yscale("log")
         ax.set_ylabel("Sample Count (log scale)")
         _title(ax, f"{label}  (Ratio 1:{ratio:.0f})")
         for b, v in zip(bars, vals):
             ax.text(b.get_x() + b.get_width() / 2, v,
                     f"{v:,}", ha="center", va="bottom",
-                    fontsize=10, fontweight="bold")
+                    fontsize=13, fontweight="bold")
 
-    fig.suptitle("Effect of SMOTE Oversampling on Training Set",
-                 fontsize=14, fontweight="bold", y=1.02)
+    _suptitle(fig, "Effect of SMOTE Oversampling on Training Set")
     fig.tight_layout()
     _save(fig, "fig06_smote_effect.png")
 
@@ -306,20 +344,21 @@ def figure_model_comparison():
     results_df = results_df[["precision", "recall", "f1",
                              "roc_auc", "pr_auc", "mcc"]].astype(float)
 
-    fig, axes = plt.subplots(2, 2, figsize=(13, 9))
+    fig, axes = plt.subplots(2, 2, figsize=(16, 11))
 
     s = results_df["f1"].sort_values()
     s.plot(kind="barh", ax=axes[0, 0], color=PALETTE["accent"],
-           edgecolor="black", linewidth=1.0)
+           edgecolor="black", linewidth=1.4)
     _title(axes[0, 0], "F1 Score by Model")
     axes[0, 0].set_xlim(0, 1)
     for i, v in enumerate(s.values):
-        axes[0, 0].text(v + 0.01, i, f"{v:.3f}", va="center", fontsize=9)
+        axes[0, 0].text(v + 0.01, i, f"{v:.3f}", va="center",
+                        fontsize=12, fontweight="bold")
 
     results_df[["precision", "recall"]].plot(
         kind="bar", ax=axes[0, 1],
         color=[PALETTE["accent"], PALETTE["fraud"]],
-        edgecolor="black", linewidth=0.8,
+        edgecolor="black", linewidth=1.2,
     )
     _title(axes[0, 1], "Precision vs Recall")
     axes[0, 1].set_ylim(0, 1)
@@ -327,29 +366,31 @@ def figure_model_comparison():
 
     s = results_df["pr_auc"].sort_values()
     s.plot(kind="barh", ax=axes[1, 0], color=PALETTE["nonfraud"],
-           edgecolor="black", linewidth=1.0)
+           edgecolor="black", linewidth=1.4)
     _title(axes[1, 0], "PR-AUC Comparison")
     axes[1, 0].set_xlim(0, 1)
     for i, v in enumerate(s.values):
-        axes[1, 0].text(v + 0.01, i, f"{v:.3f}", va="center", fontsize=9)
+        axes[1, 0].text(v + 0.01, i, f"{v:.3f}", va="center",
+                        fontsize=12, fontweight="bold")
 
     s = results_df["mcc"].sort_values()
     s.plot(kind="barh", ax=axes[1, 1], color=PALETTE["highlight"],
-           edgecolor="black", linewidth=1.0)
+           edgecolor="black", linewidth=1.4)
     _title(axes[1, 1], "Matthews Correlation Coefficient (MCC)")
     axes[1, 1].set_xlim(-1, 1)
     for i, v in enumerate(s.values):
-        axes[1, 1].text(v + 0.01, i, f"{v:.3f}", va="center", fontsize=9)
+        axes[1, 1].text(v + 0.01, i, f"{v:.3f}", va="center",
+                        fontsize=12, fontweight="bold")
 
-    fig.suptitle("Model Performance Comparison (Validation-Tuned Threshold)",
-                 fontsize=14, fontweight="bold", y=1.00)
+    _suptitle(fig, "Model Performance Comparison (Validation-Tuned Threshold)",
+              y=1.00)
     fig.tight_layout()
     _save(fig, "fig07_model_comparison.png")
 
 
 def figure_roc_pr():
     print("\n[Model] ROC / PR curves...")
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
     linear_models = {"Logistic Regression", "SVM"}
     cmap = plt.get_cmap("tab10")
 
@@ -368,14 +409,14 @@ def figure_roc_pr():
         color = cmap(i % 10)
 
         fpr, tpr, _ = roc_curve(y_test, y_proba)
-        axes[0].plot(fpr, tpr, lw=1.8, color=color,
+        axes[0].plot(fpr, tpr, lw=2.4, color=color,
                      label=f"{name} (AUC={metrics['roc_auc']:.3f})")
 
         prec, rec, _ = precision_recall_curve(y_test, y_proba)
-        axes[1].plot(rec, prec, lw=1.8, color=color,
+        axes[1].plot(rec, prec, lw=2.4, color=color,
                      label=f"{name} (PR-AUC={metrics['pr_auc']:.3f})")
 
-    axes[0].plot([0, 1], [0, 1], "k--", lw=1.0, label="Random (AUC=0.5)")
+    axes[0].plot([0, 1], [0, 1], "k--", lw=1.5, label="Random (AUC=0.5)")
     axes[0].set_xlabel("False Positive Rate")
     axes[0].set_ylabel("True Positive Rate")
     _title(axes[0], "ROC Curves")
@@ -413,11 +454,11 @@ def figure_cost_threshold():
 
     best_idx = int(np.argmin(costs))
 
-    fig, ax1 = plt.subplots(figsize=(11, 6))
-    ax1.plot(thresholds, costs, color=PALETTE["accent"], lw=2.0,
+    fig, ax1 = plt.subplots(figsize=(13, 7))
+    ax1.plot(thresholds, costs, color=PALETTE["accent"], lw=2.8,
              label="Total Cost (BDT)")
     ax1.axvline(thresholds[best_idx], color=PALETTE["fraud"],
-                ls="--", lw=1.5,
+                ls="--", lw=2.0,
                 label=f"Cost-optimal = {thresholds[best_idx]:.3f}")
     ax1.set_xlabel("Decision Threshold")
     ax1.set_ylabel("Total Business Cost (BDT)", color=PALETTE["accent"])
@@ -425,7 +466,7 @@ def figure_cost_threshold():
 
     ax2 = ax1.twinx()
     ax2.plot(thresholds, f1s, color=PALETTE["nonfraud"], alpha=0.65,
-             lw=1.8, label="F1 Score")
+             lw=2.4, label="F1 Score")
     ax2.set_ylabel("F1 Score", color=PALETTE["nonfraud"])
     ax2.tick_params(axis="y", labelcolor=PALETTE["nonfraud"])
     ax2.grid(False)
@@ -433,7 +474,7 @@ def figure_cost_threshold():
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2,
-               loc="upper center", ncol=3)
+               loc="upper center", ncol=3, prop={"size": 12, "weight": "bold"})
 
     _title(ax1, f"Threshold vs Cost & F1 ({best_name}) — MFS 250:1 Cost Ratio")
     fig.tight_layout()
@@ -453,15 +494,15 @@ def figure_confusion_matrix():
 
     cm = confusion_matrix(y_test, y_pred)
 
-    fig, ax = plt.subplots(figsize=(7, 6))
+    fig, ax = plt.subplots(figsize=(8.5, 7))
     sns.heatmap(cm, annot=True, fmt=",d", cmap="Blues", ax=ax,
                 cbar=False,
                 xticklabels=["Non-Fraud", "Fraud"],
                 yticklabels=["Non-Fraud", "Fraud"],
-                annot_kws={"size": 14, "weight": "bold"},
-                linewidths=2, linecolor="white")
-    ax.set_xlabel("Predicted Label", fontsize=12, fontweight="bold")
-    ax.set_ylabel("True Label", fontsize=12, fontweight="bold")
+                annot_kws={"size": 17, "weight": "bold"},
+                linewidths=2.5, linecolor="white")
+    ax.set_xlabel("Predicted Label", fontsize=14, fontweight="bold", labelpad=10)
+    ax.set_ylabel("True Label", fontsize=14, fontweight="bold", labelpad=10)
     _title(ax, f"Confusion Matrix — {best_name} (τ = {threshold:.3f})")
     fig.tight_layout()
     _save(fig, "fig10_confusion_matrix.png")
@@ -472,7 +513,6 @@ def figure_confusion_matrix():
 # ══════════════════════════════════════════════════════════════
 
 def build_shap_explainer():
-    """Builds model + SHAP explainer and computes values."""
     print("\n[SHAP] Building explainer...")
     best_name = model_meta["best_model"]
     safe = best_name.lower().replace(" ", "_")
@@ -480,7 +520,6 @@ def build_shap_explainer():
 
     X_te = X_test_scaled if best_name in {"Logistic Regression", "SVM"} else X_test
 
-    # ⭐ FAST: 500 fraud + 500 non-fraud (still publication-grade)
     fraud_idx = y_test[y_test == 1].sample(500, random_state=RANDOM_STATE).index
     nonfraud_idx = y_test[y_test == 0].sample(500, random_state=RANDOM_STATE).index
     sample_idx = fraud_idx.union(nonfraud_idx)
@@ -489,12 +528,10 @@ def build_shap_explainer():
     y_sample = y_test.loc[sample_idx].reset_index(drop=True)
     print(f"  SHAP sample: {X_sample.shape}")
 
-    # Unwrap model if wrapped
     model_obj = best_model
     if hasattr(best_model, "calibrated_classifiers_"):
         model_obj = best_model.calibrated_classifiers_[0].estimator
 
-    # Build explainer
     try:
         explainer = shap.TreeExplainer(model_obj)
         shap_values = explainer.shap_values(X_sample)
@@ -506,7 +543,6 @@ def build_shap_explainer():
         X_sample = X_sample.iloc[:300].reset_index(drop=True)
         y_sample = y_sample.iloc[:300].reset_index(drop=True)
 
-    # Normalize
     if isinstance(shap_values, list):
         sv = shap_values[1]
     elif isinstance(shap_values, np.ndarray) and shap_values.ndim == 3:
@@ -523,25 +559,38 @@ def build_shap_explainer():
     print(f"  Base value: {exp_val:.4f}")
     return best_model, X_sample, y_sample, sv, exp_val, best_name
 
+
 def figure_shap_bar(X_sample, sv, best_name):
     print("\n[SHAP] Global bar plot...")
-    plt.figure(figsize=(10, 8))
-    shap.summary_plot(sv, X_sample, plot_type="bar",
-                      show=False, max_display=20)
-    plt.title(f"SHAP Feature Importance — {best_name}",
-              fontsize=13, fontweight="bold")
-    plt.tight_layout()
-    _save(plt.gcf(), "fig11_shap_bar.png")
+    # SHAP forces its own font; wrap and override with plt.rc context
+    with plt.rc_context({"font.size": 13,
+                         "axes.titlesize": 16,
+                         "axes.titleweight": "bold",
+                         "axes.labelsize": 13}):
+        plt.figure(figsize=(12, 9))
+        shap.summary_plot(sv, X_sample, plot_type="bar",
+                          show=False, max_display=20)
+        plt.title(f"SHAP Feature Importance — {best_name}",
+                  fontsize=16, fontweight="bold", pad=12)
+        plt.xlabel("Mean |SHAP value|", fontsize=13, fontweight="bold")
+        plt.tight_layout()
+        _save(plt.gcf(), "fig11_shap_bar.png")
 
 
 def figure_shap_beeswarm(X_sample, sv, best_name):
     print("\n[SHAP] Beeswarm plot...")
-    plt.figure(figsize=(10, 10))
-    shap.summary_plot(sv, X_sample, show=False, max_display=20)
-    plt.title(f"SHAP Summary — {best_name}",
-              fontsize=13, fontweight="bold")
-    plt.tight_layout()
-    _save(plt.gcf(), "fig12_shap_beeswarm.png")
+    with plt.rc_context({"font.size": 13,
+                         "axes.titlesize": 16,
+                         "axes.titleweight": "bold",
+                         "axes.labelsize": 13}):
+        plt.figure(figsize=(12, 11))
+        shap.summary_plot(sv, X_sample, show=False, max_display=20)
+        plt.title(f"SHAP Summary — {best_name}",
+                  fontsize=16, fontweight="bold", pad=12)
+        plt.xlabel("SHAP value (impact on model output)",
+                   fontsize=13, fontweight="bold")
+        plt.tight_layout()
+        _save(plt.gcf(), "fig12_shap_beeswarm.png")
 
 
 def figure_shap_dependence(X_sample, sv):
@@ -550,21 +599,27 @@ def figure_shap_dependence(X_sample, sv):
     top_features = list(X_sample.columns[np.argsort(mean_abs)[-4:][::-1]])
     print(f"  Top 4: {top_features}")
 
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    axes = axes.ravel()
+    with plt.rc_context({"font.size": 12,
+                         "axes.titlesize": 14,
+                         "axes.titleweight": "bold",
+                         "axes.labelsize": 12}):
+        fig, axes = plt.subplots(2, 2, figsize=(16, 11))
+        axes = axes.ravel()
 
-    for i, feature in enumerate(top_features):
-        try:
-            shap.dependence_plot(feature, sv, X_sample,
-                                 ax=axes[i], show=False)
-            _title(axes[i], f"SHAP Dependence: {feature}")
-        except Exception as e:
-            axes[i].text(0.5, 0.5, f"Failed: {feature}",
-                         ha="center", va="center",
-                         transform=axes[i].transAxes)
+        for i, feature in enumerate(top_features):
+            try:
+                shap.dependence_plot(feature, sv, X_sample,
+                                     ax=axes[i], show=False)
+                axes[i].set_title(f"SHAP Dependence: {feature}",
+                                  fontsize=14, fontweight="bold")
+            except Exception:
+                axes[i].text(0.5, 0.5, f"Failed: {feature}",
+                             ha="center", va="center",
+                             transform=axes[i].transAxes,
+                             fontsize=13, fontweight="bold")
 
-    fig.tight_layout()
-    _save(fig, "fig13_shap_dependence.png")
+        fig.tight_layout()
+        _save(fig, "fig13_shap_dependence.png")
 
 
 def figure_shap_waterfalls(best_model, X_sample, y_sample, sv, exp_val):
@@ -587,11 +642,15 @@ def figure_shap_waterfalls(best_model, X_sample, y_sample, sv, exp_val):
                 data=X_sample.iloc[idx].values,
                 feature_names=X_sample.columns.tolist(),
             )
-            plt.figure(figsize=(10, 6))
-            shap.plots.waterfall(exp, max_display=15, show=False)
-            plt.title(title, fontsize=13, fontweight="bold")
-            plt.tight_layout()
-            _save(plt.gcf(), fname)
+            with plt.rc_context({"font.size": 12,
+                                 "axes.titlesize": 14,
+                                 "axes.titleweight": "bold",
+                                 "axes.labelsize": 12}):
+                plt.figure(figsize=(12, 7))
+                shap.plots.waterfall(exp, max_display=15, show=False)
+                plt.title(title, fontsize=14, fontweight="bold", pad=10)
+                plt.tight_layout()
+                _save(plt.gcf(), fname)
         except Exception as e:
             print(f"  ✗ Waterfall failed: {e}")
 
@@ -608,7 +667,6 @@ def figure_shap_waterfalls(best_model, X_sample, y_sample, sv, exp_val):
 
 
 def figure_shap_top_features_bar(X_sample, sv):
-    """Extra: horizontal bar of top-15 with SHAP mean|value|."""
     print("\n[SHAP] Top-feature bar chart...")
     mean_abs = np.abs(sv).mean(axis=0)
     imp = pd.DataFrame({
@@ -616,14 +674,14 @@ def figure_shap_top_features_bar(X_sample, sv):
         "mean_abs_shap": mean_abs,
     }).sort_values("mean_abs_shap", ascending=True).tail(15)
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(12, 8))
     bars = ax.barh(imp["feature"], imp["mean_abs_shap"],
-                   color=PALETTE["accent"], edgecolor="black", linewidth=1.0)
+                   color=PALETTE["accent"], edgecolor="black", linewidth=1.4)
     ax.set_xlabel("Mean |SHAP value|")
     _title(ax, "Top-15 Features by Mean Absolute SHAP Value")
     for b, v in zip(bars, imp["mean_abs_shap"]):
         ax.text(v + 0.001, b.get_y() + b.get_height() / 2,
-                f"{v:.4f}", va="center", fontsize=9)
+                f"{v:.4f}", va="center", fontsize=12, fontweight="bold")
     fig.tight_layout()
     _save(fig, "fig16_shap_top_features.png")
 
@@ -633,42 +691,35 @@ def figure_shap_top_features_bar(X_sample, sv):
 # ══════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("Generating ALL publication-quality figures")
+    print("Generating ALL publication-grade figures")
     print("=" * 60)
 
-    # A — EDA (5 figures)
     figure_eda_distribution()
     figure_eda_type_fraud()
     figure_eda_amount()
     figure_eda_time()
     figure_eda_correlation()
 
-    # B — SMOTE (1 figure, fixed)
     figure_smote_effect()
 
-    # C — Model Training (2 figures)
     figure_model_comparison()
     figure_roc_pr()
 
-    # D — Business Evaluation (2 figures)
     figure_cost_threshold()
     figure_confusion_matrix()
 
-    # E — SHAP (6 figures)
     print("\n" + "─" * 60)
-    print("Loading SHAP — this may take 1-3 minutes...")
+    print("Loading SHAP — this may take ~1 minute...")
     print("─" * 60)
 
     best_model, X_sample, y_sample, sv, exp_val, best_name = build_shap_explainer()
 
-    figure_shap_bar(X_sample, sv, best_name)          # fig11
-    figure_shap_beeswarm(X_sample, sv, best_name)     # fig12
-    figure_shap_dependence(X_sample, sv)              # fig13
-    figure_shap_waterfalls(best_model, X_sample,
-                           y_sample, sv, exp_val)     # fig14, fig15
-    figure_shap_top_features_bar(X_sample, sv)        # fig16
+    figure_shap_bar(X_sample, sv, best_name)
+    figure_shap_beeswarm(X_sample, sv, best_name)
+    figure_shap_dependence(X_sample, sv)
+    figure_shap_waterfalls(best_model, X_sample, y_sample, sv, exp_val)
+    figure_shap_top_features_bar(X_sample, sv)
 
-    # Summary
     print("\n" + "=" * 60)
     print(f"✅ ALL 16 FIGURES SAVED → {FIG_DIR}")
     print("=" * 60)
