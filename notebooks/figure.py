@@ -33,12 +33,12 @@ print(f"📁 Project root: {ROOT}")
 
 RAW_DATA   = ROOT / "data" / "raw" / "finguard-fraud-detection-dataset.csv"
 PROCESSED  = ROOT / "data" / "processed"
-FIG_DIR    = ROOT / "reports" / "figuresNewV2"
+FIG_DIR    = ROOT / "reports" / "figuresNewV4"
 MODEL_DIR  = ROOT / "models_saved"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────
-# ⭐ PUBLICATION-GRADE STYLE (larger + bolder fonts)
+# ⭐ PUBLICATION-GRADE STYLE (Arial Font + Bolder Ticks)
 # ──────────────────────────────────────────────────────────────
 DPI = 600
 RANDOM_STATE = 42
@@ -48,27 +48,29 @@ mpl.rcParams.update({
     "figure.dpi": DPI,
     "savefig.dpi": DPI,
 
-    # Fonts: bigger & bolder
-    "font.family": "serif",
-    "font.serif": ["Times New Roman", "DejaVu Serif", "Liberation Serif"],
-    "font.size": 13,                          # ← was 11
-    "axes.titlesize": 16,                     # ← was 13
+    # ⭐ Fonts: Changed to Arial + Bigger & Bolder
+    "font.family": "sans-serif",              # Switched to sans-serif
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "font.size": 13,                          
+    "axes.titlesize": 16,                     
     "axes.titleweight": "bold",
     "axes.titlepad": 12,
-    "axes.labelsize": 14,                     # ← was 11
-    "axes.labelweight": "bold",               # ← was semibold
+    "axes.labelsize": 14,                     
+    "axes.labelweight": "bold",               
     "axes.labelpad": 10,
 
     # Ticks
-    "xtick.labelsize": 12,                    # ← was 9
-    "ytick.labelsize": 12,                    # ← was 9
+    "xtick.labelsize": 12,                    
+    "ytick.labelsize": 12,                    
     "xtick.major.width": 1.4,
     "ytick.major.width": 1.4,
     "xtick.major.size": 6,
     "ytick.major.size": 6,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
 
     # Legend
-    "legend.fontsize": 12,                    # ← was 9
+    "legend.fontsize": 12,                    
     "legend.title_fontsize": 13,
     "legend.frameon": True,
     "legend.framealpha": 0.95,
@@ -77,14 +79,14 @@ mpl.rcParams.update({
     # Axes
     "axes.spines.top": False,
     "axes.spines.right": False,
-    "axes.linewidth": 1.4,                    # ← was default
+    "axes.linewidth": 1.4,                    
     "axes.grid": True,
     "grid.alpha": 0.3,
     "grid.linestyle": "--",
     "grid.linewidth": 0.8,
 
     # Lines
-    "lines.linewidth": 2.4,                   # ← was 2.0
+    "lines.linewidth": 2.4,                   
 
     # Save
     "savefig.bbox": "tight",
@@ -102,7 +104,17 @@ PALETTE = {
 }
 
 
+def _bold_ticks(ax):
+    """Helper to forcefully bold X and Y axis tick labels."""
+    for lbl in ax.get_xticklabels() + ax.get_yticklabels():
+        lbl.set_fontweight("bold")
+
+
 def _save(fig, name):
+    # Bold ticks for every axes in the figure before saving
+    for ax in fig.get_axes():
+        _bold_ticks(ax)
+        
     path = FIG_DIR / name
     fig.savefig(path, dpi=DPI, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -125,7 +137,7 @@ def _require(path, label):
 
 
 # ──────────────────────────────────────────────────────────────
-# LOAD
+# LOAD DATA
 # ──────────────────────────────────────────────────────────────
 print("\nLoading data...")
 
@@ -168,17 +180,17 @@ def figure_eda_distribution():
     counts = df_raw["isFraud"].value_counts().sort_index()
     total = counts.sum()
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))   # ← bigger
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     bars = axes[0].bar(["Non-Fraud", "Fraud"], counts.values,
                        color=[PALETTE["nonfraud"], PALETTE["fraud"]],
-                       edgecolor="black", linewidth=1.8)   # ← thicker
+                       edgecolor="black", linewidth=1.8)
     axes[0].set_ylabel("Transaction Count")
     _title(axes[0], "Fraud vs Non-Fraud Count")
     for b, v in zip(bars, counts.values):
         axes[0].text(b.get_x() + b.get_width() / 2, v,
                      f"{v:,}\n({100 * v / total:.3f}%)",
                      ha="center", va="bottom",
-                     fontsize=13, fontweight="bold")       # ← bigger
+                     fontsize=13, fontweight="bold")
 
     axes[1].pie(counts.values, labels=["Non-Fraud", "Fraud"],
                 autopct="%1.3f%%",
@@ -285,11 +297,11 @@ def figure_eda_correlation():
 
 
 # ══════════════════════════════════════════════════════════════
-# PART B — SMOTE FIGURE (FIXED)
+# PART B — SMOTE FIGURE
 # ══════════════════════════════════════════════════════════════
 
 def figure_smote_effect():
-    print("\n[FE] SMOTE effect figure (FIXED)...")
+    print("\n[FE] SMOTE effect figure...")
 
     n_fraud_before    = int(split_meta["train_fraud"])
     n_train_before    = int(split_meta["train_size"])
@@ -335,7 +347,7 @@ def figure_smote_effect():
 
 
 # ══════════════════════════════════════════════════════════════
-# PART C — MODEL TRAINING FIGURES (2)
+# PART C — MODEL TRAINING FIGURES
 # ══════════════════════════════════════════════════════════════
 
 def figure_model_comparison():
@@ -432,7 +444,7 @@ def figure_roc_pr():
 
 
 # ══════════════════════════════════════════════════════════════
-# PART D — BUSINESS EVALUATION (2)
+# PART D — BUSINESS EVALUATION
 # ══════════════════════════════════════════════════════════════
 
 def figure_cost_threshold():
@@ -509,7 +521,7 @@ def figure_confusion_matrix():
 
 
 # ══════════════════════════════════════════════════════════════
-# PART E — SHAP INTERPRETABILITY (6)
+# PART E — SHAP INTERPRETABILITY
 # ══════════════════════════════════════════════════════════════
 
 def build_shap_explainer():
@@ -562,8 +574,9 @@ def build_shap_explainer():
 
 def figure_shap_bar(X_sample, sv, best_name):
     print("\n[SHAP] Global bar plot...")
-    # SHAP forces its own font; wrap and override with plt.rc context
-    with plt.rc_context({"font.size": 13,
+    with plt.rc_context({"font.family": "sans-serif",
+                         "font.sans-serif": ["Arial", "DejaVu Sans"],
+                         "font.size": 13,
                          "axes.titlesize": 16,
                          "axes.titleweight": "bold",
                          "axes.labelsize": 13}):
@@ -579,7 +592,9 @@ def figure_shap_bar(X_sample, sv, best_name):
 
 def figure_shap_beeswarm(X_sample, sv, best_name):
     print("\n[SHAP] Beeswarm plot...")
-    with plt.rc_context({"font.size": 13,
+    with plt.rc_context({"font.family": "sans-serif",
+                         "font.sans-serif": ["Arial", "DejaVu Sans"],
+                         "font.size": 13,
                          "axes.titlesize": 16,
                          "axes.titleweight": "bold",
                          "axes.labelsize": 13}):
@@ -599,7 +614,9 @@ def figure_shap_dependence(X_sample, sv):
     top_features = list(X_sample.columns[np.argsort(mean_abs)[-4:][::-1]])
     print(f"  Top 4: {top_features}")
 
-    with plt.rc_context({"font.size": 12,
+    with plt.rc_context({"font.family": "sans-serif",
+                         "font.sans-serif": ["Arial", "DejaVu Sans"],
+                         "font.size": 12,
                          "axes.titlesize": 14,
                          "axes.titleweight": "bold",
                          "axes.labelsize": 12}):
@@ -642,7 +659,9 @@ def figure_shap_waterfalls(best_model, X_sample, y_sample, sv, exp_val):
                 data=X_sample.iloc[idx].values,
                 feature_names=X_sample.columns.tolist(),
             )
-            with plt.rc_context({"font.size": 12,
+            with plt.rc_context({"font.family": "sans-serif",
+                                 "font.sans-serif": ["Arial", "DejaVu Sans"],
+                                 "font.size": 12,
                                  "axes.titlesize": 14,
                                  "axes.titleweight": "bold",
                                  "axes.labelsize": 12}):
@@ -674,17 +693,46 @@ def figure_shap_top_features_bar(X_sample, sv):
         "mean_abs_shap": mean_abs,
     }).sort_values("mean_abs_shap", ascending=True).tail(15)
 
-    fig, ax = plt.subplots(figsize=(12, 8))
-    bars = ax.barh(imp["feature"], imp["mean_abs_shap"],
-                   color=PALETTE["accent"], edgecolor="black", linewidth=1.4)
-    ax.set_xlabel("Mean |SHAP value|")
-    _title(ax, "Top-15 Features by Mean Absolute SHAP Value")
+    fig, ax = plt.subplots(figsize=(14, 10))
+
+    bars = ax.barh(
+        imp["feature"], imp["mean_abs_shap"],
+        color=PALETTE["accent"],
+        edgecolor="black",
+        linewidth=1.6,
+        height=0.7,
+    )
+
+    ax.set_xlabel("Mean |SHAP value|", fontsize=18, fontweight="bold", labelpad=12)
+    ax.set_ylabel("")
+
+    ax.set_title(
+        "Top-15 Features by Mean Absolute SHAP Value",
+        fontsize=20, fontweight="bold", pad=16,
+    )
+
+    # Very large, bold ticks for this specific chart
+    ax.tick_params(axis="y", labelsize=15)
+    ax.tick_params(axis="x", labelsize=14)
+
+    x_max = imp["mean_abs_shap"].max()
     for b, v in zip(bars, imp["mean_abs_shap"]):
-        ax.text(v + 0.001, b.get_y() + b.get_height() / 2,
-                f"{v:.4f}", va="center", fontsize=12, fontweight="bold")
+        ax.text(
+            v + x_max * 0.012,
+            b.get_y() + b.get_height() / 2,
+            f"{v:.4f}",
+            va="center",
+            fontsize=13,
+            fontweight="bold",
+        )
+
+    ax.set_xlim(0, x_max * 1.15)
+
+    ax.grid(True, axis="x", alpha=0.35, linestyle="--", linewidth=0.8)
+    ax.grid(False, axis="y")
+
     fig.tight_layout()
     _save(fig, "fig16_shap_top_features.png")
-
 
 # ══════════════════════════════════════════════════════════════
 # MAIN
